@@ -49,7 +49,7 @@ async def worker():
         try:
             price = get_price(COIN)
             if price is not None:
-                text = f"📊 Поточна ціна #{COIN}:\n\n**{price:g} USDT**"
+                text = f"📊 Price #{COIN}:\n\n**{price:g} USDT**"
                 await bot.send_message(chat_id=CHANNEL_ID, text=text, parse_mode="Markdown")
                 print(f"✅ Успішно надіслано: {price:g} USDT", flush=True)
             else:
