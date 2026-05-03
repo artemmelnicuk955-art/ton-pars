@@ -4,7 +4,7 @@ from aiogram import Bot
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
 
-TOKEN = "8303473938:AAFbgFCvvzLvK8ohaMBvvBaNkRyqxWhaHWM"
+TOKEN = "8303473938:AAHV_PpGGr8O2AHOEgrIG-1GIvxdV8nh5os"
 CHANNEL_ID = "@tonpricebloom"
 COIN = "TON"
 
