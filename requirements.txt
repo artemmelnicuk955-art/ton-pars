@@ -1,5 +1,2 @@
-asyncio
 requests
 aiogram
-treading
-http.server
