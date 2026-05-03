@@ -8,7 +8,7 @@ from aiogram import Bot
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # --- НАЛАШТУВАННЯ ---
-TOKEN = "8303473938:AAHV_PpGGr8O2AHOEgrIG-1GIvxdV8nh5os"
+TOKEN = "8303473938:AAGKqvPiWxvrsNolIBenVgObrFb2i0PiCWk"
 CHANNEL_ID = "@tonpricebloom" 
 COIN = "TON"
 
@@ -53,7 +53,7 @@ async def worker():
             try:
                 price = get_price(COIN)
                 if price:
-                    text = f"📊 Поточна ціна #{COIN}:\n\n**{price:g} USDT**"
+                    text = f"📊 Price #{COIN}:\n\n**{price:g} USDT**"
                     await bot.send_message(chat_id=CHANNEL_ID, text=text, parse_mode="Markdown")
                     print(f"[{RUN_ID}] ✅ Пост о {now.strftime('%H:%M:%S')}: {price:g} USDT", flush=True)
                     last_posted_minute = current_minute
