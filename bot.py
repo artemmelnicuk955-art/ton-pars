@@ -1,41 +1,68 @@
+
 import asyncio
 import requests
+import threading
+import sys
 from aiogram import Bot
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import threading
 
+# --- НАЛАШТУВАННЯ ---
 TOKEN = "8303473938:AAHV_PpGGr8O2AHOEgrIG-1GIvxdV8nh5os"
-CHANNEL_ID = "@tonpricebloom"
+CHANNEL_ID = "@tonpricebloom" 
 COIN = "TON"
+INTERVAL = 60  # Постити раз на хвилину
 
-# --- ЦЕЙ БЛОК ДЛЯ ТОГО, ЩОБ RENDER НЕ ВИМИКАВ БОТА ---
+# --- СЕРВЕР ДЛЯ RENDER (ЩОБ БОТ НЕ ЗАСИНАВ) ---
 class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"Bot is alive")
+        self.wfile.write(b"Bot is running")
+
+    def log_message(self, format, *args):
+        return # Вимикаємо зайві логи сервера в консолі
 
 def run_health_server():
     server = HTTPServer(('0.0.0.0', 8080), HealthCheckHandler)
+    print("✅ Веб-сервер здоров'я запущено на порту 8080", flush=True)
     server.serve_forever()
-# ---------------------------------------------------
 
+# --- ЛОГІКА БОТА ---
 bot = Bot(token=TOKEN)
 
+def get_price(coin):
+    # Використовуємо MEXC, бо він стабільніше працює на Render
+    url = f"https://api.mexc.com/api/v3/ticker/price?symbol={coin.upper()}USDT"
+    try:
+        r = requests.get(url, timeout=15)
+        if r.status_code == 200:
+            return float(r.json()["price"])
+        else:
+            print(f"⚠️ Помилка біржі: {r.status_code}", flush=True)
+    except Exception as e:
+        print(f"⚠️ Помилка мережі при запиті ціни: {e}", flush=True)
+    return None
+
 async def worker():
+    print(f"🚀 Початок моніторингу {COIN}...", flush=True)
     while True:
         try:
-            url = f"https://api.bybit.com/v5/market/tickers?category=spot&symbol={COIN}USDT"
-            r = requests.get(url, timeout=10)
-            price = float(r.json()["result"]["list"][0]["lastPrice"])
-            await bot.send_message(chat_id=CHANNEL_ID, text=f"📊 #{COIN}: {price:g} USDT", parse_mode="Markdown")
-            print(f"Пост: {price}")
+            price = get_price(COIN)
+            if price is not None:
+                text = f"📊 Поточна ціна #{COIN}:\n\n**{price:g} USDT**"
+                await bot.send_message(chat_id=CHANNEL_ID, text=text, parse_mode="Markdown")
+                print(f"✅ Успішно надіслано: {price:g} USDT", flush=True)
+            else:
+                print("❌ Не вдалося отримати ціну, спробую через хвилину", flush=True)
         except Exception as e:
-            print(f"Помилка: {e}")
-        await asyncio.sleep(60)
+            print(f"❌ Помилка Telegram: {e}", flush=True)
+        
+        await asyncio.sleep(INTERVAL)
 
 if __name__ == "__main__":
-    # Запускаємо веб-сервер у фоновому потоці
+    # 1. Запускаємо сервер у фоновому потоці
     threading.Thread(target=run_health_server, daemon=True).start()
-    # Запускаємо бота
+    
+    # 2. Запускаємо основний цикл бота
+    print("🤖 Бот стартує...", flush=True)
     asyncio.run(worker())
